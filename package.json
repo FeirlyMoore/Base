@@ -1,5 +1,5 @@
 {
-  "name": "REDFOX39 Base",
+  "name": "REDFOX39-Base",
   "private": true,
   "description": "<!DOCTYPE Liky>",
   "devDependencies": {
@@ -17,7 +17,7 @@
     "gulp-sass": "4.1.0",
     "gulp-sourcemaps": "3.0.0",
     "gulp-svgstore": "8.0.0",
-    "gulp-terser": "2.0.1",
+    "gulp-terser": "^2.1.0",
     "gulp-webp": "4.0.1",
     "postcss": "8.3.6",
     "postcss-csso": "5.0.1",
@@ -32,9 +32,15 @@
     "start": "gulp"
   },
   "browserslist": [
-    "last 2 versions",
+    ">0.2%",
     "not dead",
-    "not ie <= 11"
+    "not op_mini all"
+  ],
+  "development": [
+    "last 1 chrome version",
+    "last 1 firefox version",
+    "last 1 safari version",
+    "last 1 ie version"
   ],
   "editorconfig-cli": [
     "*.json",

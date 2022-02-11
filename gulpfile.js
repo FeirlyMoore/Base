@@ -5,16 +5,12 @@ const sass = require('gulp-sass');
 const postcss = require('gulp-postcss');
 const autoprefixer = require('autoprefixer');
 const csso = require('postcss-csso');
-const cleanCSS = require('gulp-clean-css');
 const rename = require('gulp-rename');
 const htmlmin = require('gulp-htmlmin');
-const uglify = require('gulp-uglify');
-const terser = require('gulp-terser');
 const imagemin = require('gulp-imagemin');
 const webp = require('gulp-webp');
 const svgstore = require('gulp-svgstore');
 const del = require('del');
-const fileinclude = require('gulp-file-include');
 const sync = require('browser-sync').create();
 
 // Styles
@@ -25,15 +21,16 @@ const styles = () => {
     .pipe(sourcemap.init())
     .pipe(sass())
     .pipe(gulp.dest("docs/css"))
+    .pipe(gulp.dest("dist/css"))
     .pipe(gulp.dest("source/css"))
     .pipe(postcss([
       autoprefixer(),
       csso()
     ]))
-    .pipe(cleanCSS({level: 2}))
     .pipe(rename("style.min.css"))
     .pipe(sourcemap.write("."))
     .pipe(gulp.dest("docs/css"))
+    .pipe(gulp.dest("dist/css"))
     .pipe(gulp.dest("source/css"))
     .pipe(sync.stream());
 }
@@ -45,22 +42,19 @@ exports.styles = styles;
 const html = () => {
   return gulp.src("source/*.html")
     .pipe(htmlmin({ collapseWhitespace: true }))
-    .pipe(gulp.dest("docs"));
+    .pipe(gulp.dest("docs"))
+    .pipe(gulp.dest("dist"));
 }
 
 // Scripts
 
 const scripts = () => {
   return gulp.src("source/js/script.js")
-    .pipe(fileinclude({
-      prefix: '@@',
-      basepath: '@file'
-    }))
     .pipe(gulp.dest("docs/js"))
-    .pipe(uglify())
-    .pipe(terser())
+    .pipe(gulp.dest("dist/js"))
     .pipe(rename("script.min.js"))
     .pipe(gulp.dest("docs/js"))
+    .pipe(gulp.dest("dist/js"))
     .pipe(sync.stream());
 }
 
@@ -69,7 +63,7 @@ exports.scripts = scripts;
 // Images
 
 const optimizeImages = () => {
-  return gulp.src("source/img/**/*.{png,jpg,svg}")
+  return gulp.src("source/img/**/*.{png,jpg,svg,webp,avif}")
     .pipe(imagemin({
       interlaced: false,
       progressive: false,
@@ -79,13 +73,15 @@ const optimizeImages = () => {
       ]
     }))
     .pipe(gulp.dest("docs/img"))
+    .pipe(gulp.dest("dist/img"))
 }
 
 exports.images = optimizeImages;
 
 const copyImages = () => {
-  return gulp.src("source/img/**/*.{png,jpg,svg}")
+  return gulp.src("source/img/**/*.{png,jpg,svg,webp,avif}")
     .pipe(gulp.dest("docs/img"))
+    .pipe(gulp.dest("dist/img"))
 }
 
 exports.images = copyImages;
@@ -96,6 +92,7 @@ const createWebp = () => {
   return gulp.src("source/img/**/*.{jpg,png}")
     .pipe(webp({quality: 90}))
     .pipe(gulp.dest("docs/img"))
+    .pipe(gulp.dest("dist/img"))
 }
 
 exports.createWebp = createWebp;
@@ -103,12 +100,13 @@ exports.createWebp = createWebp;
 // Sprite
 
 const sprite = () => {
-  return gulp.src("source/img/icons/*.svg")
+  return gulp.src("source/img/icons/**/*.svg")
     .pipe(svgstore({
       inlineSvg: true
     }))
     .pipe(rename("sprite.svg"))
-    .pipe(gulp.dest("docs/img"));
+    .pipe(gulp.dest("docs/img"))
+    .pipe(gulp.dest("dist/img"));
 }
 
 exports.sprite = sprite;
@@ -117,14 +115,16 @@ exports.sprite = sprite;
 
 const copy = (done) => {
   gulp.src([
-    "source/fonts/*.{woff2,woff}",
-    "source/*.ico",
+    "source/js/partial/*.js",
+    "source/fonts/*.{woff2,woff,ttf}",
+    "source/*.{ico,png}",
     "source/img/**/*.svg",
     "!source/img/icons/*.svg",
   ], {
     base: "source"
   })
     .pipe(gulp.dest("docs"))
+    .pipe(gulp.dest("dist"))
   done();
 }
 
@@ -134,6 +134,7 @@ exports.copy = copy;
 
 const clean = () => {
   return del("docs");
+  return del("dist");
 };
 
 // Server
@@ -141,8 +142,9 @@ const clean = () => {
 const server = (done) => {
   sync.init({
     server: {
-      baseDir: "docs"
+      baseDir: "dist"
     },
+    host: "192.168.1.71",
     tunnel: true,
     cors: true,
     notify: false,
@@ -170,7 +172,7 @@ const watcher = () => {
 
 // Build
 
-const docs = gulp.series(
+const build = gulp.series(
   clean,
   copy,
   optimizeImages,
@@ -183,9 +185,7 @@ const docs = gulp.series(
   ),
 );
 
-exports.docs = docs;
-
-// Default
+exports.build = build;
 
 exports.default = gulp.series(
   clean,
